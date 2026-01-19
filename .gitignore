@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary state (gitignored by design)
+.pushguard/.state.json
+
+# Environment variables (user-specific)
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
