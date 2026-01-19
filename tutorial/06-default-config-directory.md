@@ -1,0 +1,42 @@
+# 06 - Default Config Directory
+
+**Goal:** Create the default configuration file in .pushguard/config.yml with sensible defaults.
+
+Create `.pushguard/config.yml`:
+
+```yaml
+# PushGuard Configuration
+
+# LLM Provider (openai | anthropic | groq)
+provider: openai
+
+# Default model to use (silent mode)
+model: gpt-4o-mini
+
+# Agent preset (strict | balanced | permissive)
+# - strict: Flags bugs, security, performance, code quality issues
+# - balanced: Flags bugs and security issues
+# - permissive: Only flags critical bugs and security
+agent_preset: strict
+
+# Enable interactive mode by default (almost never set to true)
+# Use PUSHGUARD_INTERACTIVE=1 env var or CLI commands instead
+interactive: false
+
+# Optional: Model presets for different use cases
+models:
+  fast: gpt-4o-mini
+  deep: o1-preview
+  cheap: gpt-3.5-turbo
+```
+
+This configuration enforces the non-interactive-by-default philosophy. The `interactive: false` setting ensures pushes remain silent unless explicitly opted in.
+
+Commit the default configuration:
+
+```bash
+git add .pushguard/config.yml
+git commit -m "Add default PushGuard configuration"
+```
+
+Next step: [07-logger-utility-module.md](07-logger-utility-module.md)
