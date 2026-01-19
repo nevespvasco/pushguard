@@ -1,0 +1,12 @@
+Review this git diff for critical issues only:
+- Security vulnerabilities that could be exploited
+- Bugs that would cause crashes or data loss
+
+Ignore everything else (style, performance, code quality).
+
+JSON response format:
+{
+  "hasIssues": boolean,
+  "issues": [{"severity": "error", "message": "...", "file": "...", "line": N}],
+  "summary": "..."
+}
