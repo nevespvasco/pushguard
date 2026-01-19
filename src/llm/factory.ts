@@ -1,4 +1,4 @@
-import type { LLMProvider, AgentPreset } from './index.js';
+import type { LLMProvider } from './index.js';
 import type { Provider } from '../config.js';
 import { OpenAIProvider } from './openai.js';
 

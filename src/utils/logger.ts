@@ -5,7 +5,7 @@ export interface LoggerOptions {
 }
 
 class Logger {
-  private silent: boolean;
+  public silent: boolean;
 
   constructor(options: LoggerOptions = {}) {
     this.silent = options.silent ?? false;

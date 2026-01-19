@@ -25,7 +25,6 @@ export function getRemoteBranch(remote: string = 'origin'): string | null {
 
 export function getDiff(remote: string = 'origin'): string {
   try {
-    const branch = getCurrentBranch();
     const remoteBranch = getRemoteBranch(remote);
     
     if (!remoteBranch) {

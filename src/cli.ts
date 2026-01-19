@@ -2,9 +2,9 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { saveState, loadState } from './state.js';
+import { saveState } from './state.js';
 import { loadConfig, updateConfig } from './config.js';
-import { readFileSync, writeFileSync, chmodSync, existsSync } from 'fs';
+import { writeFileSync, chmodSync, existsSync } from 'fs';
 import { join } from 'path';
 import inquirer from 'inquirer';
 import { runHook } from './hook.js';
