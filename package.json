@@ -1,0 +1,19 @@
+{
+  "name": "pushguard",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI-powered git pre-push hook for code review",
+  "bin": {
+    "pushguard": "./dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts"
+  },
+  "keywords": ["git", "hook", "pre-push", "ai", "code-review"],
+  "author": "",
+  "license": "MIT"
+}
