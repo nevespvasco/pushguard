@@ -41,11 +41,11 @@ export class OpenAIProvider implements LLMProvider {
         { signal: controller.signal }
       );
 
-      clearTimeout(timeoutId);
       return this.parseResponse(response.choices[0]?.message?.content || '{}');
     } catch (error) {
-      clearTimeout(timeoutId);
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

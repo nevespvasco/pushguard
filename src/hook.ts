@@ -107,7 +107,8 @@ async function getReviewDiff(): Promise<string> {
     
     return diff;
   } catch (error) {
-    logger.warning(`Failed to get diff: ${error}`);
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warning(`Failed to get diff: ${message}`);
     // Fail-open: allow push if we can't get diff
     process.exit(0);
     // This will never execute, but TypeScript needs it

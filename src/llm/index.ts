@@ -22,8 +22,3 @@ export interface LLMProvider {
     timeout?: number
   ): Promise<ReviewResult>;
 }
-
-export interface ProviderConfig {
-  apiKey: string;
-  model: string;
-}

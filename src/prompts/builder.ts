@@ -12,14 +12,21 @@ const PROMPT_FILES: Record<AgentPreset, string> = {
   permissive: join(__dirname, 'permissive-review.txt'),
 };
 
-export function loadPrompt(preset: AgentPreset): string {
-  const filePath = PROMPT_FILES[preset];
-  return readFileSync(filePath, 'utf-8').trim();
-}
+// Cache loaded prompts in memory to avoid repeated file reads
+const promptCache: Partial<Record<AgentPreset, string>> = {};
 
-export function buildPrompt(preset: AgentPreset, diff: string): string {
-  const systemPrompt = loadPrompt(preset);
-  return `${systemPrompt}\n\n---\n\nGit diff to review:\n\n\`\`\`diff\n${diff}\n\`\`\``;
+export function loadPrompt(preset: AgentPreset): string {
+  // Return cached prompt if available
+  if (promptCache[preset]) {
+    return promptCache[preset]!;
+  }
+  
+  const filePath = PROMPT_FILES[preset];
+  const content = readFileSync(filePath, 'utf-8').trim();
+  
+  // Cache the loaded prompt
+  promptCache[preset] = content;
+  return content;
 }
 
 export function getTimeoutForPreset(preset: AgentPreset): number {

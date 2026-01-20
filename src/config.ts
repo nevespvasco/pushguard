@@ -10,7 +10,7 @@ export const ConfigSchema = z.object({
   provider: ProviderSchema.default('openai'),
   model: z.string().min(1),
   agent_preset: AgentPresetSchema.default('strict'),
-  interactive: z.boolean().default(false),
+  // Note: Interactive mode is controlled via PUSHGUARD_INTERACTIVE=1 env var, not config
   models: ModelsSchema,
 });
 
@@ -29,14 +29,17 @@ const DEFAULT_CONFIG: Config = {
   provider: 'openai',
   model: 'gpt-4o-mini',
   agent_preset: 'strict',
-  interactive: false,
 };
 
 export function loadConfig(): Config {
   let raw: unknown;
   
   if (existsSync(CONFIG_PATH)) {
-    raw = yaml.load(readFileSync(CONFIG_PATH, 'utf-8'));
+    // js-yaml v4 is safe by default (unsafe tags removed unless explicitly enabled)
+    // Using DEFAULT_SCHEMA explicitly for clarity, though default is already safe
+    raw = yaml.load(readFileSync(CONFIG_PATH, 'utf-8'), {
+      schema: yaml.DEFAULT_SCHEMA,
+    });
   } else if (existsSync(CONFIG_JSON_PATH)) {
     raw = JSON.parse(readFileSync(CONFIG_JSON_PATH, 'utf-8'));
   } else {
