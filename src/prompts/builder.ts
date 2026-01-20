@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import type { AgentPreset } from '../llm/index.js';
+import { PRESET_TIMEOUTS } from '../constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,12 +31,5 @@ export function loadPrompt(preset: AgentPreset): string {
 }
 
 export function getTimeoutForPreset(preset: AgentPreset): number {
-  switch (preset) {
-    case 'strict':
-      return 45000; // 45s
-    case 'balanced':
-      return 30000; // 30s
-    case 'permissive':
-      return 15000; // 15s
-  }
+  return PRESET_TIMEOUTS[preset];
 }

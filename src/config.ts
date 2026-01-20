@@ -18,12 +18,29 @@ export type Config = z.infer<typeof ConfigSchema>;
 export type Provider = z.infer<typeof ProviderSchema>;
 export type AgentPreset = z.infer<typeof AgentPresetSchema>;
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
 import { join, dirname } from 'path';
+import { getGitRoot } from './utils/git.js';
 import yaml from 'js-yaml';
+import { MAX_CONFIG_SIZE } from './constants.js';
 
-const CONFIG_PATH = join(process.cwd(), '.pushguard', 'config.yml');
-const CONFIG_JSON_PATH = join(process.cwd(), '.pushguard', 'config.json');
+/**
+ * Get the config directory path, ensuring we're in a git repository
+ */
+function getConfigDir(): string {
+  // Try to find git root relative to repo
+  try {
+    const gitRoot = getGitRoot();
+    return join(gitRoot, '.pushguard');
+  } catch {
+    // If not in git repo, use current directory (will fail later if needed)
+    return join(process.cwd(), '.pushguard');
+  }
+}
+
+const CONFIG_DIR = getConfigDir();
+const CONFIG_PATH = join(CONFIG_DIR, 'config.yml');
+const CONFIG_JSON_PATH = join(CONFIG_DIR, 'config.json');
 
 const DEFAULT_CONFIG: Config = {
   provider: 'openai',
@@ -35,12 +52,29 @@ export function loadConfig(): Config {
   let raw: unknown;
   
   if (existsSync(CONFIG_PATH)) {
+    // Check file size before reading to prevent memory exhaustion
+    const stats = statSync(CONFIG_PATH);
+    if (stats.size > MAX_CONFIG_SIZE) {
+      throw new Error(
+        `Config file too large: ${stats.size} bytes (max: ${MAX_CONFIG_SIZE} bytes). ` +
+        `Please reduce the file size or split configuration.`
+      );
+    }
+    
     // js-yaml v4 is safe by default (unsafe tags removed unless explicitly enabled)
     // Using DEFAULT_SCHEMA explicitly for clarity, though default is already safe
     raw = yaml.load(readFileSync(CONFIG_PATH, 'utf-8'), {
       schema: yaml.DEFAULT_SCHEMA,
     });
   } else if (existsSync(CONFIG_JSON_PATH)) {
+    // Check JSON config file size as well
+    const stats = statSync(CONFIG_JSON_PATH);
+    if (stats.size > MAX_CONFIG_SIZE) {
+      throw new Error(
+        `Config file too large: ${stats.size} bytes (max: ${MAX_CONFIG_SIZE} bytes). ` +
+        `Please reduce the file size or split configuration.`
+      );
+    }
     raw = JSON.parse(readFileSync(CONFIG_JSON_PATH, 'utf-8'));
   } else {
     return DEFAULT_CONFIG;
@@ -49,6 +83,7 @@ export function loadConfig(): Config {
   const result = ConfigSchema.safeParse(raw);
   if (!result.success) {
     console.warn('Invalid config, using defaults:', result.error.message);
+    console.warn('Fix your config file or run: pushguard config --interactive');
     return DEFAULT_CONFIG;
   }
   

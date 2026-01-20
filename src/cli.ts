@@ -6,6 +6,9 @@ import { saveState } from './state.js';
 import { loadConfig, updateConfig } from './config.js';
 import { writeFileSync, chmodSync, existsSync } from 'fs';
 import { join } from 'path';
+import { platform } from 'os';
+import { z } from 'zod';
+import { STATE_EXPIRATION_MS } from './constants.js';
 import inquirer from 'inquirer';
 import { runHook } from './hook.js';
 
@@ -26,6 +29,9 @@ function showBanner() {
   `));
 }
 
+const PresetSchema = z.enum(['strict', 'balanced', 'permissive']);
+const ModelSchema = z.string().min(1).max(100); // Reasonable model name length
+
 program
   .command('review')
   .description('Set temporary model/preset override for next push')
@@ -39,20 +45,30 @@ program
     const preset = options.preset || config.agent_preset;
     
     // Validate preset
-    if (!['strict', 'balanced', 'permissive'].includes(preset)) {
+    const presetResult = PresetSchema.safeParse(preset);
+    if (!presetResult.success) {
       console.error(chalk.red(`Invalid preset: ${preset}`));
+      console.error(chalk.gray(`Valid presets are: strict, balanced, permissive`));
+      process.exit(1);
+    }
+    
+    // Validate model name format
+    const modelResult = ModelSchema.safeParse(model);
+    if (!modelResult.success) {
+      console.error(chalk.red(`Invalid model name: ${model}`));
+      console.error(chalk.gray(`Model name must be 1-100 characters`));
       process.exit(1);
     }
     
     saveState({
       overrideModel: model,
-      overridePreset: preset,
-      expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      overridePreset: presetResult.data,
+      expiresAt: Date.now() + STATE_EXPIRATION_MS,
     });
     
     console.log(chalk.green(`✓ Override set for next push:`));
     console.log(chalk.gray(`  Model: ${model}`));
-    console.log(chalk.gray(`  Preset: ${preset}`));
+    console.log(chalk.gray(`  Preset: ${presetResult.data}`));
   });
 
 program
@@ -132,22 +148,54 @@ program
   .command('install')
   .description('Install git pre-push hook')
   .action(() => {
-    const hookPath = join(process.cwd(), '.git', 'hooks', 'pre-push');
+    const gitDir = join(process.cwd(), '.git');
+    const hookPath = join(gitDir, 'hooks', 'pre-push');
     
-    if (!existsSync(join(process.cwd(), '.git'))) {
+    if (!existsSync(gitDir)) {
       console.error(chalk.red('Not in a git repository'));
+      console.error(chalk.gray('PushGuard requires a git repository to install hooks.'));
+      console.error(chalk.gray('Please run this command from within a git repository.'));
       process.exit(1);
     }
     
-    const hookContent = `#!/bin/sh
+    // Cross-platform hook: Use Node.js wrapper that works on Windows and Unix
+    const isWindows = platform() === 'win32';
+    
+    // Create a Node.js wrapper that works cross-platform
+    const hookContent = isWindows
+      ? `#!/usr/bin/env node
+// PushGuard pre-push hook (Windows-compatible)
+const { spawn } = require('child_process');
+const pushguard = spawn('pushguard', ['hook', ...process.argv.slice(2)], {
+  stdio: 'inherit',
+  shell: false,
+});
+
+pushguard.on('exit', (code) => {
+  process.exit(code || 0);
+});
+
+pushguard.on('error', (err) => {
+  console.error('PushGuard error:', err.message);
+  process.exit(1);
+});
+`
+      : `#!/bin/sh
 # PushGuard pre-push hook
-pushguard hook "$@" || exit 1
+exec pushguard hook "$@" || exit 1
 `;
     
     writeFileSync(hookPath, hookContent, 'utf-8');
-    chmodSync(hookPath, 0o755);
+    
+    // Only chmod on Unix-like systems
+    if (!isWindows) {
+      chmodSync(hookPath, 0o755);
+    }
     
     console.log(chalk.green(`✓ Pre-push hook installed at ${hookPath}`));
+    if (isWindows) {
+      console.log(chalk.yellow('  Note: Ensure Node.js is in your PATH for the hook to work'));
+    }
   });
 
 // Add hook command (called by git)
