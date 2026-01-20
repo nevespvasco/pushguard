@@ -310,6 +310,20 @@ git push --no-verify
 - `GEMINI_API_KEY`: API key for Gemini provider
 - `PUSHGUARD_INTERACTIVE`: Set to `1` to enable interactive mode (allows model selection prompts during hook execution). This is required for interactive mode as the config file does not support this setting.
 
+## 🚀 Future enhancements
+- Caching: Cache review results for unchanged diffs
+- Incremental reviews: Only review changed files
+- Custom rules: Allow user-defined rules/configs
+- Integration: Support GitHub Actions, GitLab CI, etc.
+- Metrics: Track review stats (issues found, time, etc.)
+- Parallel reviews: Use multiple models for validation
+- Local models: Support local LLMs (Ollama, etc.)
+- Diff filtering: Ignore certain file patterns/types
+- Webhook support: Review PRs automatically
+- Database: Store review history for analytics
+- Retry logic: Automatic retries with exponential backoff
+- Batch mode: Review multiple branches at once
+
 ## License
 
 MIT
