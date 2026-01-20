@@ -1,6 +1,8 @@
 import type { LLMProvider } from './index.js';
 import type { Provider } from '../config.js';
 import { OpenAIProvider } from './openai.js';
+import { AnthropicProvider } from './anthropic.js';
+import { GeminiProvider } from './gemini.js';
 
 export interface ProviderConfig {
   apiKey: string;
@@ -15,9 +17,9 @@ export function createProvider(
     case 'openai':
       return new OpenAIProvider(config);
     case 'anthropic':
-      throw new Error('Anthropic provider not yet implemented');
-    case 'groq':
-      throw new Error('Groq provider not yet implemented');
+      return new AnthropicProvider(config);
+    case 'gemini':
+      return new GeminiProvider(config);
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
@@ -29,7 +31,7 @@ export function getApiKeyEnvVar(provider: Provider): string {
       return 'OPENAI_API_KEY';
     case 'anthropic':
       return 'ANTHROPIC_API_KEY';
-    case 'groq':
-      return 'GROQ_API_KEY';
+    case 'gemini':
+      return 'GEMINI_API_KEY';
   }
 }

@@ -89,7 +89,7 @@ program
             type: 'list',
             name: 'provider',
             message: 'Select LLM provider:',
-            choices: ['openai', 'anthropic', 'groq'],
+            choices: ['openai', 'anthropic', 'gemini'],
             default: config.provider,
           },
         ]);

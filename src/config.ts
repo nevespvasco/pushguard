@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const ProviderSchema = z.enum(['openai', 'anthropic', 'groq']);
+const ProviderSchema = z.enum(['openai', 'anthropic', 'gemini']);
 
 const AgentPresetSchema = z.enum(['strict', 'balanced', 'permissive']);
 

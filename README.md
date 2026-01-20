@@ -6,7 +6,7 @@ PushGuard automatically reviews your code changes before pushing to a remote rep
 
 ## Features
 
-- 🤖 **AI-Powered Reviews**: Uses OpenAI, Anthropic, or Groq models to review code changes
+- 🤖 **AI-Powered Reviews**: Uses OpenAI, Anthropic, or Gemini models to review code changes
 - 🎯 **Three Review Presets**: Choose from strict, balanced, or permissive review modes
 - ⚙️ **Configurable**: Flexible configuration with support for multiple models and providers
 - 🔄 **Git Integration**: Seamless integration with git pre-push hooks
@@ -17,7 +17,7 @@ PushGuard automatically reviews your code changes before pushing to a remote rep
 
 - **Node.js**: Version 20.0.0 or higher
 - **Git**: A git repository initialized in your project
-- **API Key**: An API key for your chosen LLM provider (OpenAI, Anthropic, or Groq)
+- **API Key**: An API key for your chosen LLM provider (OpenAI, Anthropic, or Gemini)
 
 ## Installation
 
@@ -63,9 +63,9 @@ export OPENAI_API_KEY="your-openai-api-key"
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
 ```
 
-**For Groq:**
+**For Gemini:**
 ```bash
-export GROQ_API_KEY="your-groq-api-key"
+export GEMINI_API_KEY="your-gemini-api-key"
 ```
 
 On Windows (PowerShell):
@@ -87,7 +87,7 @@ pushguard config --interactive
 ```
 
 This will allow you to:
-- Select your LLM provider (OpenAI, Anthropic, or Groq)
+- Select your LLM provider (OpenAI, Anthropic, or Gemini)
 - Choose your default model
 - Set your agent preset (strict, balanced, or permissive)
 
@@ -116,7 +116,7 @@ PushGuard stores its configuration in `.pushguard/config.yml`. You can edit this
 ### Configuration File Structure
 
 ```yaml
-# LLM Provider (openai | anthropic | groq)
+# LLM Provider (openai | anthropic | gemini)
 provider: openai
 
 # Default model to use (silent mode)
@@ -307,7 +307,7 @@ git push --no-verify
 
 - `OPENAI_API_KEY`: API key for OpenAI provider
 - `ANTHROPIC_API_KEY`: API key for Anthropic provider
-- `GROQ_API_KEY`: API key for Groq provider
+- `GEMINI_API_KEY`: API key for Gemini provider
 - `PUSHGUARD_INTERACTIVE`: Set to `1` to enable interactive mode (allows model selection prompts during hook execution). This is required for interactive mode as the config file does not support this setting.
 
 ## License
