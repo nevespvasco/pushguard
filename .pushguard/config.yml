@@ -1,6 +1,6 @@
 # PushGuard Configuration
 
-# LLM Provider (openai | anthropic | groq)
+# LLM Provider (openai | anthropic | gemini)
 provider: openai
 
 # Default model to use (silent mode)
