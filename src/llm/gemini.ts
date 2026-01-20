@@ -31,16 +31,16 @@ export class GeminiProvider implements LLMProvider {
       // Gemini combines system instruction with user message
       const userMessage = `${systemPrompt}\n\n---\n\nGit diff to review:\n\n\`\`\`diff\n${diff}\n\`\`\``;
       
-      const response = await this.client.models.generateContent(
-        {
-          model: this.model,
-          contents: userMessage,
-          config: {
-            responseMimeType: 'application/json',
+      const response = await this.client.models.generateContent({
+        model: this.model,
+        contents: userMessage,
+        config: {
+          responseMimeType: 'application/json',
+          httpOptions: {
+            timeout: timeout,
           },
         },
-        { signal: controller.signal }
-      );
+      });
 
       // Extract text from Gemini response
       // response.text concatenates all candidate text parts
