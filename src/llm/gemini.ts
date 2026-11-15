@@ -22,9 +22,6 @@ export class GeminiProvider implements LLMProvider {
     preset: AgentPreset,
     timeout: number = 30000
   ): Promise<ReviewResult> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
     try {
       // Load preset-specific system prompt
       const systemPrompt = loadPrompt(preset);
@@ -40,6 +37,8 @@ export class GeminiProvider implements LLMProvider {
           systemInstruction: systemPrompt,
           responseMimeType: 'application/json',
           temperature: 0.1,
+          // The SDK aborts the underlying fetch once this many ms have passed
+          httpOptions: { timeout },
         },
       });
 
@@ -70,8 +69,6 @@ export class GeminiProvider implements LLMProvider {
           originalError: error,
         }
       );
-    } finally {
-      clearTimeout(timeoutId);
     }
   }
 

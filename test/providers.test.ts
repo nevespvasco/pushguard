@@ -39,8 +39,18 @@ interface ProviderCase {
   respond: (text: string) => void;
   /** Makes the fake SDK reject with `error`. */
   fail: (error: unknown) => void;
+  /** Makes the fake SDK hang until the timeout the provider asked for elapses. */
+  hang: () => void;
   sdkCall: () => ReturnType<typeof vi.fn>;
 }
+
+const abortError = () => Object.assign(new Error('Request aborted'), { name: 'AbortError' });
+
+/** Hung request that only settles when the provider's abort signal fires (OpenAI, Anthropic). */
+const hangUntilSignal = (_body: unknown, options: { signal: AbortSignal }) =>
+  new Promise((_resolve, reject) => {
+    options.signal.addEventListener('abort', () => reject(abortError()));
+  });
 
 const CASES: ProviderCase[] = [
   {
@@ -49,6 +59,7 @@ const CASES: ProviderCase[] = [
     respond: (text) =>
       sdk.openaiCreate.mockResolvedValue({ choices: [{ message: { content: text } }] }),
     fail: (error) => sdk.openaiCreate.mockRejectedValue(error),
+    hang: () => sdk.openaiCreate.mockImplementation(hangUntilSignal),
     sdkCall: () => sdk.openaiCreate,
   },
   {
@@ -57,6 +68,7 @@ const CASES: ProviderCase[] = [
     respond: (text) =>
       sdk.anthropicCreate.mockResolvedValue({ content: [{ type: 'text', text }] }),
     fail: (error) => sdk.anthropicCreate.mockRejectedValue(error),
+    hang: () => sdk.anthropicCreate.mockImplementation(hangUntilSignal),
     sdkCall: () => sdk.anthropicCreate,
   },
   {
@@ -64,6 +76,16 @@ const CASES: ProviderCase[] = [
     label: 'Gemini',
     respond: (text) => sdk.geminiGenerate.mockResolvedValue({ text }),
     fail: (error) => sdk.geminiGenerate.mockRejectedValue(error),
+    // @google/genai takes no signal: it aborts its own fetch after config.httpOptions.timeout
+    hang: () =>
+      sdk.geminiGenerate.mockImplementation(
+        (params: { config?: { httpOptions?: { timeout?: number } } }) =>
+          new Promise((_resolve, reject) => {
+            const timeout = params.config?.httpOptions?.timeout;
+            if (timeout) setTimeout(() => reject(abortError()), timeout);
+            else reject(new Error('request would hang: no httpOptions given'));
+          })
+      ),
     sdkCall: () => sdk.geminiGenerate,
   },
 ];
@@ -187,26 +209,15 @@ describe.each(CASES)('$label provider', ({ name, label, respond, fail, sdkCall }
   });
 });
 
-describe.each(CASES.filter((c) => c.name !== 'gemini'))(
-  '$label request timeout',
-  ({ name, sdkCall }) => {
-    it('aborts the request when the preset timeout elapses', async () => {
-      // Simulate a hung request that only settles when the abort signal fires
-      sdkCall().mockImplementation(
-        (_body: unknown, options: { signal: AbortSignal }) =>
-          new Promise((_resolve, reject) => {
-            options.signal.addEventListener('abort', () =>
-              reject(Object.assign(new Error('Request aborted'), { name: 'AbortError' }))
-            );
-          })
-      );
+describe.each(CASES)('$label request timeout', ({ name, hang }) => {
+  it('aborts the request when the preset timeout elapses', async () => {
+    hang();
 
-      const error = await createProvider(name, { apiKey: 'k', model: 'm' })
-        .review(DIFF, 'strict', 20)
-        .catch((e: unknown) => e);
+    const error = await createProvider(name, { apiKey: 'k', model: 'm' })
+      .review(DIFF, 'strict', 20)
+      .catch((e: unknown) => e);
 
-      expect(error).toBeInstanceOf(ReviewError);
-      expect((error as ReviewError).context.errorType).toBe('timeout');
-    });
-  }
-);
+    expect(error).toBeInstanceOf(ReviewError);
+    expect((error as ReviewError).context.errorType).toBe('timeout');
+  });
+});
