@@ -1,5 +1,7 @@
 # PushGuard
 
+[![CI](https://github.com/nevespvasco/pushguard/actions/workflows/ci.yml/badge.svg)](https://github.com/nevespvasco/pushguard/actions/workflows/ci.yml)
+
 > AI-powered git pre-push hook for automated code review
 
 PushGuard automatically reviews your code changes before pushing to a remote repository using AI language models. It helps catch bugs, security issues, and code quality problems before they reach your repository.
@@ -240,6 +242,35 @@ Run the CLI in development mode (using `tsx` for TypeScript execution):
 npm run dev
 ```
 
+### Tests
+
+PushGuard uses [Vitest](https://vitest.dev). The LLM SDKs, git and the filesystem are mocked, so the suite needs no API keys and makes no network calls.
+
+```bash
+# Run the test suite once
+npm test
+
+# Re-run tests on file changes
+npm run test:watch
+
+# Type-check the source and the tests
+npm run typecheck
+```
+
+The tests live in `test/` and cover:
+
+- **Config loading**: YAML and JSON configs, schema defaults, invalid values falling back to defaults, and the config size limit
+- **Safe YAML parsing**: `!!js/function` and other executable tags are rejected, and `__proto__` keys cannot pollute objects
+- **Presets**: each preset loads its own prompt and timeout, and temporary overrides from `pushguard review` take precedence
+- **Input validation**: remote names, branch names, model names and file paths are checked against command injection and path traversal payloads, and git always runs without a shell
+- **Error sanitisation**: filesystem paths are stripped from git errors and error detail is length-capped
+- **Fail-open behaviour**: provider errors, timeouts, unreadable diffs and rate limiting all allow the push, while real findings block it
+- **Providers**: OpenAI, Anthropic and Gemini responses are parsed and validated, malformed replies fail open, and SDK errors are classified
+
+### Continuous Integration
+
+[GitHub Actions](.github/workflows/ci.yml) runs install, typecheck, build and tests on every push to `main` and on every pull request, on Node.js 20 and 22.
+
 ### Project Structure
 
 ```
@@ -252,6 +283,7 @@ pushguard/
 │   ├── llm/                # LLM provider implementations
 │   ├── prompts/            # Review prompt templates
 │   └── utils/              # Utility functions
+├── test/                   # Vitest test suite
 ├── .pushguard/
 │   └── config.yml          # User configuration
 ├── package.json

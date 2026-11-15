@@ -39,8 +39,9 @@ export function getGitRoot(): string {
 /**
  * Validates a git remote name to prevent command injection
  */
-function validateRemote(remote: string): void {
-  if (!/^[a-zA-Z0-9_-]+$/.test(remote)) {
+export function validateRemote(remote: string): void {
+  // A leading dash would let git read the name as an option
+  if (!/^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(remote)) {
     throw new Error(`Invalid remote name: ${remote}`);
   }
 }
@@ -48,7 +49,7 @@ function validateRemote(remote: string): void {
 /**
  * Validates a file path to prevent path traversal attacks
  */
-function validateFilePath(filePath: string, repoRoot: string): boolean {
+export function validateFilePath(filePath: string, repoRoot: string): boolean {
   // Reject null bytes
   if (filePath.includes('\0')) {
     return false;
