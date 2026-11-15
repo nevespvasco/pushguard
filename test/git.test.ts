@@ -51,6 +51,16 @@ describe('validateRemote (command injection)', () => {
   });
 });
 
+describe('validateRemote (option injection)', () => {
+  it.each(['-x', '--help', '-', '--', '-origin'])('rejects the leading-dash name %j', (remote) => {
+    expect(() => validateRemote(remote)).toThrow(/Invalid remote name/);
+  });
+
+  it.each(['my-fork', 'fork-', '_origin', '2nd'])('still accepts %j', (remote) => {
+    expect(() => validateRemote(remote)).not.toThrow();
+  });
+});
+
 describe('validateFilePath (path traversal)', () => {
   const repo = '/home/dev/project';
 
